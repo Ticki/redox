@@ -1,4 +1,4 @@
-![Redox](icons/logo.png)
+![Redox](icons/logo-small.png)
 
 **Redox** is a Rust based operating system, designed to be modular and secure. The developer blog can be found at https://redox-os.org
 
