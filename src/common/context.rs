@@ -2,7 +2,7 @@ use alloc::boxed::*;
 
 use core::ptr;
 
-use common::memory::*;
+use common::memory;
 use common::paging::*;
 use common::resource::*;
 use common::scheduler::*;
@@ -85,7 +85,7 @@ pub unsafe extern "cdecl" fn context_exit() {
 
 pub unsafe extern "cdecl" fn context_box(box_fn_ptr: usize) {
     let box_fn = ptr::read(box_fn_ptr as *mut Box<FnBox()>);
-    unalloc(box_fn_ptr);
+    memory::unalloc(box_fn_ptr);
     box_fn();
 }
 
@@ -117,7 +117,7 @@ impl Context {
         box Context {
             stack: 0,
             stack_ptr: 0,
-            fx: alloc(512),
+            fx: memory::alloc(512),
             fx_enabled: false,
             memory: Vec::new(),
             cwd: String::new(),
@@ -128,7 +128,7 @@ impl Context {
     }
 
     pub unsafe fn new(call: u32, args: &Vec<u32>) -> Box<Context> {
-        let stack = alloc(CONTEXT_STACK_SIZE + 512);
+        let stack = memory::alloc(CONTEXT_STACK_SIZE + 512);
 
         let mut ret = box Context {
             stack: stack,
@@ -170,7 +170,7 @@ impl Context {
 
     pub fn spawn(box_fn: Box<FnBox()>) {
         unsafe {
-            let box_fn_ptr: *mut Box<FnBox()> = alloc_type();
+            let box_fn_ptr: *mut Box<FnBox()> = memory::alloc_type();
             ptr::write(box_fn_ptr, box_fn);
 
             let mut context_box_args: Vec<u32> = Vec::new();
@@ -193,8 +193,7 @@ impl Context {
     pub unsafe fn map(&mut self) {
         for entry in self.memory.iter() {
             for i in 0..(entry.virtual_size + 4095) / 4096 {
-                set_page(entry.virtual_address + i * 4096,
-                         entry.physical_address + i * 4096);
+                Page::new(entry.virtual_address + i * 4096).map(entry.physical_address + i * 4096);
             }
         }
     }
@@ -202,7 +201,7 @@ impl Context {
     pub unsafe fn unmap(&mut self) {
         for entry in self.memory.iter() {
             for i in 0..(entry.virtual_size + 4095) / 4096 {
-                identity_page(entry.virtual_address + i * 4096);
+                Page::new(entry.virtual_address + i * 4096).map_identity();
             }
         }
     }
@@ -259,13 +258,13 @@ impl Drop for Context {
 
         while let Option::Some(entry) = self.memory.remove(0) {
             unsafe {
-                unalloc(entry.physical_address);
+                memory::unalloc(entry.physical_address);
             }
         }
 
         if self.stack > 0 {
             unsafe {
-                unalloc(self.stack);
+                memory::unalloc(self.stack);
             }
             self.stack = 0;
         }
