@@ -1,5 +1,12 @@
 #![feature(asm)]
 
+extern crate core;
+#[path="../../syscall"]
+mod syscall {
+    mod call;
+    mod common;
+}
+
 
 /// Debug
 pub mod debug; // Not needed

@@ -1,7 +1,17 @@
-use common::event::*;
-use common::time::*;
+#[path="../common/src/"]
+mod common {
+    mod event;
+    mod time;
+}
 
-use graphics::window::*;
+use self::common::event::*;
+use self::common::time::*;
+
+#[path="../graphics/src"]
+mod graphics {
+    mod window;
+}
+use self::graphics::window::*;
 
 use syscall::common::*;
 

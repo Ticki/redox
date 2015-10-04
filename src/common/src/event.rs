@@ -1,6 +1,6 @@
 use core::char;
 
-use common::string::*;
+use string::*;
 
 use syscall::call::*;
 

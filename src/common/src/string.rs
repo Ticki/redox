@@ -8,8 +8,8 @@ use core::ptr;
 use core::slice::SliceExt;
 use core::str::StrExt;
 
-use common::debug::*;
-use common::vec::*;
+use debug::*;
+use vec::*;
 
 use syscall::call::*;
 

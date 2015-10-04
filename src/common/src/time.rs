@@ -1,7 +1,7 @@
 use core::cmp::*;
 use core::ops::*;
 
-use common::string::*;
+use string::*;
 
 use syscall::call::sys_time;
 use syscall::call::sys_yield;
