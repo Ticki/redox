@@ -68,7 +68,7 @@ pub struct LinkedListIter<'a, T: Clone + 'a> {
 impl<'a, T: Clone + 'a> Iterator for LinkedListIter<'a, T> {
     type Item = &'a T;
 
-    fn next(&'a mut self) -> Option<Self::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         let res = if let &LinkedList::Elem(ref e, _) = self.ll {
             Some(e)
         } else {
@@ -85,7 +85,7 @@ pub struct LinkedListIterMut<'a, T: Clone + 'a> {
 impl<'a, T: Clone + 'a> Iterator for LinkedListIterMut<'a, T> {
     type Item = &'a mut T;
 
-    fn next(&'a mut self) -> Option<Self::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         let res = if let &mut LinkedList::Elem(ref mut e, _) = self.ll {
             Some(e)
         } else {
