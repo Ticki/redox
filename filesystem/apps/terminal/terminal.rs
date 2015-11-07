@@ -8,6 +8,7 @@ use redox::console::*;
 use redox::env::*;
 use redox::time::Duration;
 use redox::to_num::*;
+use redox::hashmap::HashMap;
 
 /* Magic Macros { */
 static mut application: *mut Application<'static> = 0 as *mut Application;
@@ -24,17 +25,16 @@ macro_rules! exec {
 
 /// A command
 pub struct Command<'a> {
-    pub name: &'a str,
+    pub help: &'a str,
     pub main: Box<Fn(&Vec<String>)>,
 }
 
 impl<'a> Command<'a> {
     /// Return the vector of the commands
-    // TODO: Use a more efficient collection instead
     pub fn vec() -> Vec<Self> {
-        let mut commands: Vec<Self> = Vec::new();
-        commands.push(Command {
-            name: "echo",
+        let mut commands = HashMap::new();
+        commands.insert("echo", Command {
+            help: "echo",
             main: box |args: &Vec<String>| {
                 let echo = args.iter()
                     .skip(1)
@@ -43,8 +43,8 @@ impl<'a> Command<'a> {
             },
         });
 
-        commands.push(Command {
-            name: "open",
+        commands.insert("open", Command {
+            help: "open",
             main: box |args: &Vec<String>| {
                 if let Some(arg) = args.get(1) {
                     File::exec(arg);
@@ -52,8 +52,8 @@ impl<'a> Command<'a> {
             },
         });
 
-        commands.push(Command {
-            name: "run",
+        commands.insert("run", Command {
+            help: "run",
             main: box |args: &Vec<String>| {
                 if let Some(path) = args.get(1) {
 
@@ -71,8 +71,8 @@ impl<'a> Command<'a> {
             },
         });
 
-        commands.push(Command {
-            name: "send",
+        commands.insert("send", Command {
+            help: "send",
             main: box |args: &Vec<String>| {
                 if args.len() < 3 {
                     println!("Error: incorrect arguments");
@@ -109,8 +109,8 @@ impl<'a> Command<'a> {
             },
         });
 
-        commands.push(Command {
-            name: "sleep",
+        commands.insert("sleep", Command {
+            help: "sleep",
             main: box |args: &Vec<String>| {
                 let secs = {
                     match args.get(1) {
@@ -132,15 +132,8 @@ impl<'a> Command<'a> {
             },
         });
 
-        commands.push(Command {
-            name: "test_ht",
-            main: box |args: &Vec<String>| {
-                ::redox::hashmap::test();
-            },
-        });
-
-        commands.push(Command {
-            name: "url",
+        commands.insert("url", Command {
+            help: "url",
             main: box |args: &Vec<String>| {
                 let path = {
                     match args.get(1) {
@@ -161,8 +154,8 @@ impl<'a> Command<'a> {
             },
         });
 
-        commands.push(Command {
-            name: "url_hex",
+        commands.insert("url_hex", Command {
+            help: "url_hex",
             main: box |args: &Vec<String>| {
                 let path = {
                     match args.get(1) {
@@ -189,8 +182,8 @@ impl<'a> Command<'a> {
             },
         });
 
-        commands.push(Command {
-            name: "wget",
+        commands.insert("wget", Command {
+            help: "wget",
             main: box |args: &Vec<String>| {
                 if let Some(host) = args.get(1) {
                     if let Some(req) = args.get(2) {
@@ -213,8 +206,8 @@ impl<'a> Command<'a> {
             },
         });
 
-        commands.push(Command {
-            name: "pwd",
+        commands.insert("pwd", Command {
+            help: "pwd",
             main: box |args: &Vec<String>| {
                 let mut err = false;
                 if let Some(file) = File::open("") {
@@ -232,8 +225,8 @@ impl<'a> Command<'a> {
             },
         });
 
-        commands.push(Command {
-            name: "cd",
+        commands.insert("cd", Command {
+            help: "cd",
             main: box |args: &Vec<String>| {
                 match args.get(1) {
                     Some(path) => {
@@ -246,14 +239,14 @@ impl<'a> Command<'a> {
             },
         });
 
-        let command_list = commands.iter().fold(String::new(), |l , c| l + " " + c.name) + " exit";
-
-        commands.push(Command {
-            name: "help",
-            main: box move |args: &Vec<String>| {
-                println!("Commands:{}", command_list);
-            },
-         });
+//        let command_list = commands.iter().fold(String::new(), |l , c| l + " " + c.name) + " exit";
+//
+//        commands.insert("help", Command {
+//            help: "help",
+//            main: box move |args: &Vec<String>| {
+//                println!("Commands:{}", command_list);
+//            },
+//         });
 
         commands
     }
@@ -261,7 +254,7 @@ impl<'a> Command<'a> {
 
 /// A (env) variable
 pub struct Variable {
-    pub name: String,
+    pub help: String,
     pub value: String,
 }
 
@@ -428,11 +421,8 @@ impl<'a> Application<'a> {
             }
 
             //Commands
-            for command in self.commands.iter() {
-                if &command.name == cmd {
-                    (*command.main)(&args);
-                    return;
-                }
+            if let Some(f) = self.commands.get(cmd) {
+                f.main(&args);
             }
 
             println!("Unknown command: '{}'", cmd);
